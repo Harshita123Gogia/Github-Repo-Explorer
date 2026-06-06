@@ -1,45 +1,40 @@
-# [Project name]
+# GitHub Repo Explorer
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A full-stack web application that lets users search any GitHub username and explore their public profile, repositories, and language distribution. The Node.js backend proxies all GitHub API requests with 60-second server-side caching to avoid rate limits.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
+- `pnpm --filter @workspace/github-explorer run dev` — run the frontend (port 18759)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- API: Express 5 (GitHub proxy with in-memory cache)
+- Frontend: React 19 + Vite + Tailwind CSS v4 + shadcn/ui
+- Data fetching: TanStack Query (React Query)
+- Charts: Recharts
+- Validation: Zod + Orval codegen from OpenAPI spec
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/api-server/src/routes/github.ts` — GitHub proxy routes + cache logic
+- `artifacts/github-explorer/src/pages/home.tsx` — main SPA page
+- `lib/api-spec/openapi.yaml` — OpenAPI contract (source of truth)
+- `lib/api-zod/` — generated Zod schemas
+- `lib/api-client-react/` — generated React Query hooks
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Backend proxies all GitHub API calls — credentials never touch the browser
+- In-memory cache keyed by `username + sort + page` with 60s TTL reduces GitHub rate limit pressure
+- OpenAPI spec is the single source of truth — Zod validators and React Query hooks are both generated from it via Orval
+- All query params use coercion so string values from HTTP are safely cast to numbers/booleans
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Dark theme by default
+- No emojis in the UI

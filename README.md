@@ -8,7 +8,7 @@ A full-stack web application where users can search any GitHub username and inst
 
 ## Live Demo
 
-[https://interview-shortlist--HarshitaGogia.replit.app](https://interview-shortlist--HarshitaGogia.replit.app)
+[https://Github-Repo-Explorer--HarshitaGogia.replit.app](https://Github-Repo-Explorer--HarshitaGogia.replit.app)
 
 ---
 

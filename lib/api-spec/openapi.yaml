@@ -1,15 +1,16 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: GitHub Repo Explorer API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: github
+    description: GitHub proxy operations
 paths:
   /healthz:
     get:
@@ -24,6 +25,137 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /github/user:
+    get:
+      operationId: getGithubUser
+      tags: [github]
+      summary: Get GitHub user profile
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: GitHub user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GithubUser"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: GitHub rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /github/repos:
+    get:
+      operationId: getGithubRepos
+      tags: [github]
+      summary: Get GitHub user repositories
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [stars, name, updated]
+            default: stars
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: List of repositories with pagination info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepoListResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: GitHub rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /github/languages:
+    get:
+      operationId: getGithubLanguages
+      tags: [github]
+      summary: Get aggregated language usage across all repos
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Language usage map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LanguageStats"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: GitHub rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +166,152 @@ components:
       required:
         - status
 
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+        rateLimitReset:
+          type: ["integer", "null"]
+      required:
+        - error
+
+    GithubUser:
+      type: object
+      properties:
+        login:
+          type: string
+        name:
+          type: ["string", "null"]
+        avatar_url:
+          type: string
+        bio:
+          type: ["string", "null"]
+        followers:
+          type: integer
+        following:
+          type: integer
+        public_repos:
+          type: integer
+        html_url:
+          type: string
+        location:
+          type: ["string", "null"]
+        company:
+          type: ["string", "null"]
+        blog:
+          type: ["string", "null"]
+        created_at:
+          type: string
+        cached:
+          type: boolean
+      required:
+        - login
+        - avatar_url
+        - followers
+        - following
+        - public_repos
+        - html_url
+        - created_at
+        - cached
+
+    GithubRepo:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        full_name:
+          type: string
+        description:
+          type: ["string", "null"]
+        html_url:
+          type: string
+        language:
+          type: ["string", "null"]
+        stargazers_count:
+          type: integer
+        forks_count:
+          type: integer
+        open_issues_count:
+          type: integer
+        default_branch:
+          type: string
+        updated_at:
+          type: string
+        created_at:
+          type: string
+        fork:
+          type: boolean
+        topics:
+          type: array
+          items:
+            type: string
+        visibility:
+          type: string
+        watchers_count:
+          type: integer
+      required:
+        - id
+        - name
+        - full_name
+        - html_url
+        - stargazers_count
+        - forks_count
+        - open_issues_count
+        - default_branch
+        - updated_at
+        - created_at
+        - fork
+        - topics
+        - watchers_count
+
+    RepoListResponse:
+      type: object
+      properties:
+        repos:
+          type: array
+          items:
+            $ref: "#/components/schemas/GithubRepo"
+        total_count:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        has_more:
+          type: boolean
+        cached:
+          type: boolean
+      required:
+        - repos
+        - total_count
+        - page
+        - per_page
+        - has_more
+        - cached
+
+    LanguageEntry:
+      type: object
+      properties:
+        language:
+          type: string
+        count:
+          type: integer
+      required:
+        - language
+        - count
+
+    LanguageStats:
+      type: object
+      properties:
+        languages:
+          type: array
+          items:
+            $ref: "#/components/schemas/LanguageEntry"
+        cached:
+          type: boolean
+      required:
+        - languages
+        - cached

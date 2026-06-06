@@ -5,7 +5,9 @@
  * GitHub Repo Explorer API
  * OpenAPI spec version: 0.1.0
  */
+import type { LanguageEntry } from './languageEntry';
 
-export interface HealthStatus {
-  status: string;
+export interface LanguageStats {
+  languages: LanguageEntry[];
+  cached: boolean;
 }

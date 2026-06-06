@@ -41,6 +41,8 @@ packages:
   - scripts
 
 catalog:
+  recharts: ^2.15.3
+  date-fns: ^4.1.0
   '@replit/vite-plugin-cartographer': ^0.5.1
   '@replit/vite-plugin-dev-banner': ^0.1.1
   '@replit/vite-plugin-runtime-error-modal': ^0.0.6

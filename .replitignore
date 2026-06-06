@@ -1,5 +1,9 @@
-# The format of this file is identical to `.dockerignore`.
-# It is used to reduce the size of deployed images to make the process of publishing faster.
+# Files excluded from Replit deployments to reduce image size.
+# Format is identical to .dockerignore
 
-# No need to store the pnpm store twice.
+# pnpm store (already on the host)
 .local
+
+# dev-only directories
+node_modules
+attached_assets

@@ -45,34 +45,42 @@ const App: React.FC = () => {
   };
 
   const fetchUserData = async (searchUsername: string) => {
-  if (!searchUsername.trim()) return;
+    if (!searchUsername.trim()) return;
 
-  setLoading(true);
-  setError('');
-  setUserData(null);
-  setExpandedRepo(null);
+    setLoading(true);
+    setError('');
+    setUserData(null);
+    setExpandedRepo(null);
 
-  try {
-    // Use environment variable or fallback to Render URL
-    const API_BASE = import.meta.env.VITE_API_URL || 'https://github-repo-explorer-q43c.onrender.com';
-    
-    const response = await axios.get(`${API_BASE}/api/user/${searchUsername}`);
-    
-    setUserData(response.data);
-    saveToRecent(searchUsername);
-  } catch (err: any) {
-    console.error(err);
-    if (err.response?.status === 404) {
-      setError('User not found');
-    } else if (err.response?.status === 429) {
-      setError('Rate limit exceeded. Please try again later.');
-    } else {
-      setError('Failed to fetch user data. Please try again.');
+    try {
+      // Looks for either variable variation, falling back safely to your Render production app URL
+      const API_BASE = 
+        import.meta.env.VITE_API_URL || 
+        import.meta.env.VITE_API_BASE_URL || 
+        'https://github-repo-explorer-q43c.onrender.com';
+      
+      const response = await axios.get(`${API_BASE}/api/user/${searchUsername}`);
+      
+      // Safety Validation: Prevents React Child #31 errors by making sure we received structured JSON
+      if (response.data && typeof response.data === 'object' && 'user' in response.data) {
+        setUserData(response.data);
+        saveToRecent(searchUsername);
+      } else {
+        setError('Received an unexpected response format from the server.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      if (err.response?.status === 404) {
+        setError('User not found');
+      } else if (err.response?.status === 429) {
+        setError('Rate limit exceeded. Please try again later.');
+      } else {
+        setError('Failed to fetch user data. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +94,7 @@ const App: React.FC = () => {
 
   const sortedRepos = userData ? [...userData.repos].sort((a, b) => {
     if (sortBy === 'stars') return b.stargazers_count - a.stargazers_count;
-    if (sortBy === 'name') return a.name.localeCompare(b.name);
+    if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
     return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
   }) : [];
 
@@ -138,8 +146,8 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {error && <div style={{ color: '#f85149', textAlign: 'center', padding: '20px' }}>{error}</div>}
-        {loading && <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px' }}>Loading profile...</div>}
+        {error && <div style={{ color: '#f85149', textAlign: 'center', padding: '20px', fontWeight: 500 }}>{error}</div>}
+        {loading && <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px', color: '#8b949e' }}>Loading profile...</div>}
 
         {userData && (
           <div style={{ padding: '30px 0' }}>
@@ -164,12 +172,12 @@ const App: React.FC = () => {
                   </a>
                 </h1>
                 <p style={{ color: '#8b949e', fontSize: '20px' }}>@{userData.user.login}</p>
-                {userData.user.bio && <p style={{ marginTop: '12px', fontSize: '16px' }}>{userData.user.bio}</p>}
+                {userData.user.bio && <p style={{ marginTop: '12px', fontSize: '16px', color: '#c9d1d9' }}>{userData.user.bio}</p>}
                 
-                <div style={{ marginTop: '16px', display: 'flex', gap: '24px', fontSize: '15px' }}>
-                  <span>👥 {userData.user.followers} followers</span>
-                  <span>👤 {userData.user.following} following</span>
-                  <span>📚 {userData.user.public_repos} repositories</span>
+                <div style={{ marginTop: '16px', display: 'flex', gap: '24px', fontSize: '15px', color: '#8b949e' }}>
+                  <span>👥 <strong>{userData.user.followers}</strong> followers</span>
+                  <span>👤 <strong>{userData.user.following}</strong> following</span>
+                  <span>📚 <strong>{userData.user.public_repos}</strong> repositories</span>
                 </div>
               </div>
             </div>
@@ -189,7 +197,8 @@ const App: React.FC = () => {
                         border: '1px solid #30363d',
                         borderRadius: '6px',
                         color: 'white',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        fontWeight: 500
                       }}
                     >
                       {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -210,10 +219,11 @@ const App: React.FC = () => {
                         padding: '18px',
                         borderRadius: '8px',
                         border: `1px solid ${isExpanded ? '#58a6ff' : '#30363d'}`,
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        transition: 'border-color 0.2s'
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                           <a
                             href={repo.html_url}
@@ -224,19 +234,19 @@ const App: React.FC = () => {
                           >
                             {repo.name}
                           </a>
-                          {repo.description && <p style={{ marginTop: '6px', color: '#8b949e' }}>{repo.description}</p>}
+                          {repo.description && <p style={{ marginTop: '6px', color: '#8b949e', fontSize: '14px' }}>{repo.description}</p>}
                         </div>
-                        <div style={{ textAlign: 'right', fontSize: '14px', color: '#8b949e' }}>
-                          {repo.language && <div>💻 {repo.language}</div>}
-                          <div>⭐ {repo.stargazers_count}</div>
-                          <div>Updated {new Date(repo.updated_at).toLocaleDateString()}</div>
+                        <div style={{ textAlign: 'right', fontSize: '14px', color: '#8b949e', minWidth: '140px' }}>
+                          {repo.language && <div style={{ marginBottom: '4px' }}>💻 {repo.language}</div>}
+                          <div style={{ marginBottom: '4px' }}>⭐ {repo.stargazers_count}</div>
+                          <div>📅 {new Date(repo.updated_at).toLocaleDateString()}</div>
                         </div>
                       </div>
 
                       {isExpanded && (
-                        <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #30363d', fontSize: '15px' }}>
-                          <p><strong>Open Issues:</strong> {repo.open_issues_count || 0}</p>
-                          <p><strong>Default Branch:</strong> {repo.default_branch}</p>
+                        <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #30363d', fontSize: '15px', color: '#c9d1d9' }}>
+                          <p style={{ marginBottom: '6px' }}><strong>Open Issues:</strong> {repo.open_issues_count || 0}</p>
+                          <p><strong>Default Branch:</strong> {repo.default_branch || 'main'}</p>
                         </div>
                       )}
                     </div>

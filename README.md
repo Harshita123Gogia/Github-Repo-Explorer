@@ -1,7 +1,7 @@
 # GitHub Repo Explorer
 
 A full-stack web application where users can search any GitHub username and instantly explore their public profile and repositories. The Node.js backend acts as a proxy between the browser and the GitHub API, adding server-side caching to reduce rate-limit pressure and keeping API credentials off the client. The React frontend displays the user's avatar, bio, stats, a sortable and paginated repository list, expandable repo detail cards, and a language distribution chart — all with skeleton loading states and graceful error handling.
-![Demo](https://via.placeholder.com/800x400/0d1117/58a6ff?text=GitHub+Repo+Explorer) <!-- Replace with actual screenshot later -->
+
 
 ## ✨ Features
 

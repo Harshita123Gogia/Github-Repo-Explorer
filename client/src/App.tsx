@@ -45,34 +45,22 @@ const App: React.FC = () => {
   };
 
   const fetchUserData = async (searchUsername: string) => {
-  if (!searchUsername.trim()) return;
+    if (!searchUsername.trim()) return;
+    setLoading(true);
+    setError('');
+    setUserData(null);
+    setExpandedRepo(null);
 
-  setLoading(true);
-  setError('');
-  setUserData(null);
-  setExpandedRepo(null);
-
-  try {
-    // Use environment variable or fallback to Render URL
-    const API_BASE = import.meta.env.VITE_API_URL || 'https://github-repo-explorer-q43c.onrender.com';
-    
-    const response = await axios.get(`${API_BASE}/api/user/${searchUsername}`);
-    
-    setUserData(response.data);
-    saveToRecent(searchUsername);
-  } catch (err: any) {
-    console.error(err);
-    if (err.response?.status === 404) {
-      setError('User not found');
-    } else if (err.response?.status === 429) {
-      setError('Rate limit exceeded. Please try again later.');
-    } else {
-      setError('Failed to fetch user data. Please try again.');
+    try {
+      const response = await axios.get(`/api/user/${searchUsername}`);
+      setUserData(response.data);
+      saveToRecent(searchUsername);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to fetch user data');
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

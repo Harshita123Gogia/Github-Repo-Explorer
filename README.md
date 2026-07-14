@@ -26,13 +26,6 @@ A full-stack web application where users can search any GitHub username and inst
 - **Styling**: Vanilla CSS (Dark Theme)
 - **API**: GitHub REST API (proxied through backend)
 
-## 🚀 Live Demo
-
-*(Add your deployed link here after deployment)*
-
-**Frontend**: [Netlify / Vercel Link]  
-**Backend**: [Render / Railway Link]
-
 ## 📁 Project Structure
 
 ```
